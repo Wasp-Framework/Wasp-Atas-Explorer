@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Visualizer } from 'webwaspjs';
 import { CUSTOM_UPLOAD_SLUG, loadAvailableSets, type DemoSetConfig } from '../config/availableSets';
 import { aggregationService, centerCameraOnMesh } from '../lib/aggregationService';
+import { sanitizeUploadedAggregationData } from '../lib/uploadSanitizer';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { useBuildStore } from '../state/buildStore';
@@ -254,12 +255,14 @@ function UploadStartModal({
 function UploadDatasetModal({
   fileName,
   parts,
+  warnings,
   onClose,
   onColorChange,
   onConfirm,
 }: {
   fileName: string;
   parts: PartCatalogEntry[];
+  warnings: string[];
   onClose: () => void;
   onColorChange: (name: string, color: string) => void;
   onConfirm: () => void;
@@ -274,6 +277,16 @@ function UploadDatasetModal({
         <h2 className="modal__title">Try your own</h2>
         <p className="upload-modal__subtitle">{fileName}</p>
         <p className="upload-modal__help">Set colors for detected parts before opening the build screen.</p>
+        {warnings.length > 0 ? (
+          <div className="dataset-source-notice upload-modal__warning" role="status" aria-live="polite">
+            <strong>Loaded with unsupported features ignored.</strong>
+            <ul className="upload-modal__warning-list">
+              {warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <ul className="upload-modal__parts">
           {parts.map((entry) => (
             <li key={entry.name} className="upload-modal__part">
@@ -311,6 +324,7 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
   const [uploadFileName, setUploadFileName] = useState<string>('');
   const [uploadedAggregationData, setUploadedAggregationData] = useState<any>(null);
   const [uploadParts, setUploadParts] = useState<PartCatalogEntry[] | null>(null);
+  const [uploadWarnings, setUploadWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -330,6 +344,7 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
     (slug: string) => {
       if (slug === CUSTOM_UPLOAD_SLUG) {
         setUploadError(null);
+        setUploadWarnings([]);
         setUploadStartOpen(true);
         return;
       }
@@ -351,10 +366,12 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
     if (!file) return;
 
     setUploadError(null);
+    setUploadWarnings([]);
 
     try {
       const rawText = await file.text();
-      const aggregationData = JSON.parse(rawText);
+      const parsedData = JSON.parse(rawText);
+      const { aggregationData, warnings } = sanitizeUploadedAggregationData(parsedData);
       const aggregation = aggregationService.createAggregationFromData(aggregationData);
       const parts = aggregationService.getAggregationCatalogParts(aggregation);
 
@@ -364,6 +381,7 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
 
       setUploadFileName(file.name);
       setUploadedAggregationData(aggregationData);
+      setUploadWarnings(warnings);
       setUploadStartOpen(false);
       setUploadParts(
         parts.map((part) => ({
@@ -375,6 +393,7 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
     } catch (err: any) {
       setUploadParts(null);
       setUploadedAggregationData(null);
+      setUploadWarnings([]);
       setUploadError(err?.message || 'Could not load aggregation.json. Please check file format.');
     }
   }, []);
@@ -382,6 +401,7 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
   const closeUploadModal = useCallback(() => {
     setUploadParts(null);
     setUploadedAggregationData(null);
+    setUploadWarnings([]);
   }, []);
 
   const handleUploadConfirm = useCallback(() => {
@@ -397,12 +417,13 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
       setName: baseName || 'Custom upload',
       aggregationData: uploadedAggregationData,
       byPart,
+      warnings: uploadWarnings,
     });
     setBuildMode('random');
 
     closeUploadModal();
     navigate(`/build/${CUSTOM_UPLOAD_SLUG}`);
-  }, [uploadParts, uploadedAggregationData, uploadFileName, setUploadedDataset, setBuildMode, closeUploadModal, navigate]);
+  }, [uploadParts, uploadedAggregationData, uploadFileName, setUploadedDataset, setBuildMode, closeUploadModal, navigate, uploadWarnings]);
 
   return (
     <div className="datasets-page">
@@ -465,6 +486,7 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
         <UploadDatasetModal
           fileName={uploadFileName}
           parts={uploadParts}
+          warnings={uploadWarnings}
           onClose={closeUploadModal}
           onColorChange={handleUploadColorChange}
           onConfirm={handleUploadConfirm}

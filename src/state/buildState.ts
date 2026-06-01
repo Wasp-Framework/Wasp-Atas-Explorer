@@ -12,6 +12,7 @@ export type UploadedDatasetPayload = {
   setName: string;
   aggregationData: any;
   byPart: Record<string, string>;
+  warnings?: string[];
 };
 
 export type BuildState = {
@@ -37,6 +38,7 @@ export type BuildState = {
   description: string;
   author: string;
   uploadedDataset: UploadedDatasetPayload | null;
+  uploadedDatasetWarnings: string[];
 };
 
 export type BuildAction =
@@ -66,6 +68,7 @@ export const initialBuildState: BuildState = {
   description: '',
   author: '',
   uploadedDataset: null,
+  uploadedDatasetWarnings: [],
 };
 
 export function buildReducer(state: BuildState, action: BuildAction): BuildState {

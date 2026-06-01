@@ -147,7 +147,7 @@ export function LandingPage({ onOpenAbout }: { onOpenAbout: () => void }) {
           </p>
           <div className="landing__hero-actions">
             <Link to="/datasets" className="landing__cta-primary">
-              Explore datasets
+              Explore
             </Link>
             <a
               className="landing__cta-secondary"

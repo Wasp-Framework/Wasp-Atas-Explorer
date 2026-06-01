@@ -13,6 +13,7 @@ import {
   growToTarget,
   frameScene,
   applyColors,
+  updateSceneCameraConstraints,
   getGhostCount,
   getGhostPlacementData,
   getGhostPlacements,
@@ -59,6 +60,7 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
     isLoading,
     loadError,
     isInfoOpen,
+    uploadedDatasetWarnings,
     setLoaded,
     setLoading,
     setLoadError,
@@ -81,6 +83,7 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
       isLoading: store.isLoading,
       loadError: store.loadError,
       isInfoOpen: store.isInfoOpen,
+      uploadedDatasetWarnings: store.uploadedDatasetWarnings,
       setLoaded: store.setLoaded,
       setLoading: store.setLoading,
       setLoadError: store.setLoadError,
@@ -265,6 +268,7 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
       const viz = vizRef.current;
       if (agg && viz) {
         growToTarget(agg, targetCount, viz);
+        updateSceneCameraConstraints(viz);
       }
     },
     [setAggregationTarget],
@@ -309,6 +313,7 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
       applyColors(agg, cfg);
       // Re-render current part count to refresh materials
       growToTarget(agg, aggregationTargetCount, viz);
+      updateSceneCameraConstraints(viz);
     },
     [setPartColor, aggregationTargetCount],
   );
@@ -389,11 +394,13 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
           );
           clearOverlays();
           setAggregationTarget(agg.aggregated_parts.length);
+          updateSceneCameraConstraints(viz);
         }
       } else if (!selectedPartName) {
         if (agg.aggregated_parts.length === 0 && catalog.length > 0) {
           placeFirstPartManually(agg, catalog[0].name, viz);
           setAggregationTarget(agg.aggregated_parts.length);
+          frameScene(viz);
         }
       }
     },
@@ -413,6 +420,7 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
         removePartById(agg, hit.partId, viz);
         clearOverlays();
         setAggregationTarget(agg.aggregated_parts.length);
+        updateSceneCameraConstraints(viz);
       }
     },
     [buildMode, clearOverlays, setAggregationTarget],
@@ -634,6 +642,16 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
       {catalogNotice ? (
         <div className="dataset-source-notice dataset-source-notice--build" role="status" aria-live="polite">
           {catalogNotice}
+        </div>
+      ) : null}
+      {uploadedDatasetWarnings.length > 0 ? (
+        <div
+          className="dataset-source-notice dataset-source-notice--build dataset-source-notice--build-secondary"
+          role="status"
+          aria-live="polite"
+        >
+          <strong>Unsupported upload features were ignored.</strong>{' '}
+          {uploadedDatasetWarnings.join(' ')}
         </div>
       ) : null}
 

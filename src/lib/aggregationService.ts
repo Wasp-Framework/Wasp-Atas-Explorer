@@ -6,6 +6,7 @@ import {
   applyAggregationColors,
   setAggregationPartCount,
   frameVisualizerToScene,
+  updateVisualizerCameraConstraints,
 } from './waspAdapters';
 
 export const aggregationService = {
@@ -14,6 +15,7 @@ export const aggregationService = {
   applyAggregationColors,
   setAggregationPartCount,
   frameVisualizerToScene,
+  updateVisualizerCameraConstraints,
 };
 
 export function centerCameraOnMesh(viz: any, mesh: any, distanceScale = 3) {
@@ -28,6 +30,8 @@ export function centerCameraOnMesh(viz: any, mesh: any, distanceScale = 3) {
 
   viz.camera.position.set(center.x + distance, center.y + distance, center.z + distance);
   if (viz.cameraControls) {
+    viz.cameraControls.minDistance = Math.max(radius * 0.08, 0.25);
+    viz.cameraControls.maxDistance = Math.max(radius * 24, viz.cameraControls.minDistance * 3);
     viz.cameraControls.setLookAt(
       center.x + distance,
       center.y + distance,
@@ -38,4 +42,8 @@ export function centerCameraOnMesh(viz: any, mesh: any, distanceScale = 3) {
       false
     );
   }
+
+  viz.camera.near = Math.max(radius * 0.0025, 0.01);
+  viz.camera.far = Math.max(radius * 160, 250);
+  viz.camera.updateProjectionMatrix?.();
 }

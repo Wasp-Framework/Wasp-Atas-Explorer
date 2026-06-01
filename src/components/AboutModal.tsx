@@ -32,15 +32,16 @@ export function AboutModal({ isOpen, onClose }: AboutModalProps) {
             <a className="about-dialog__inline-link" href="https://github.com/ar0551/Wasp" target="_blank" rel="noreferrer noopener">open source</a>{' '}
             and available on{' '}
             <a className="about-dialog__inline-link" href="https://www.food4rhino.com/en/app/wasp" target="_blank" rel="noreferrer noopener">Food4Rhino</a>.
-            The core concepts have been ported to JavaScript with{' '}
-            <a className="about-dialog__inline-link" href="https://github.com/Wasp-Framework/Wasp-Atlas-Explorer" target="_blank" rel="noreferrer noopener">Wasp-Atlas-Explorer</a>{' '}
+            The browser engine lives in{' '}
+            <a className="about-dialog__inline-link" href="https://github.com/winroger/waspjs" target="_blank" rel="noreferrer noopener">webwaspjs</a>, and this website is maintained in{' '}
+            <a className="about-dialog__inline-link" href="https://github.com/Wasp-Framework/Wasp-Atas-Explorer" target="_blank" rel="noreferrer noopener">Wasp-Atas-Explorer</a>{' '}
             by{' '}
             <a className="about-dialog__inline-link" href="https://www.linkedin.com/in/rogerwinkler/" target="_blank" rel="noreferrer noopener">Roger Winkler</a>{' '}
-            and are still under development. Both, Wasp Atlas and Wasp-Atlas-Explorer, are still evolving, so suggestions, feedback, and questions are welcome.
+            in collaboration with the Wasp Framework. Both the dataset collection and the explorer are still evolving, so suggestions, feedback, and questions are welcome.
           </p>
           <div className="about-dialog__actions">
             <Link className="about-dialog__primary-cta" to="/datasets" onClick={onClose}>
-              Explore datasets
+              Explore
             </Link>
             <a className="landing__cta-secondary" href="mailto:hello@rogerwinkler.de">
               Get in touch ⤴

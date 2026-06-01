@@ -228,6 +228,10 @@
   z-index: 35;
 }
 
+.dataset-source-notice--build-secondary {
+  bottom: 84px;
+}
+
 .landing__grid {
   width: 100%;
   flex: 1;
@@ -393,6 +397,17 @@
   margin: 0;
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.upload-modal__warning {
+  margin: 0;
+}
+
+.upload-modal__warning-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.25rem;
 }
 
 .upload-modal__parts {

@@ -16,15 +16,12 @@ export function Navbar({ onOpenAbout }: { onOpenAbout: () => void }) {
         </Link>
       </div>
       <div className="navbar__actions">
-        <Link className="navbar__explore-link" to="/datasets" aria-label="Explore datasets">
-          Datasets
-        </Link>
         <button className="navbar__page-link navbar__page-button" type="button" onClick={onOpenAbout} aria-label="About Wasp Atlas">
           About
         </button>
         <a
           className="navbar__github-link"
-          href="https://github.com/Wasp-Framework/Wasp-Atlas-Explorer"
+          href="https://github.com/Wasp-Framework/Wasp-Atas-Explorer"
           target="_blank"
           rel="noreferrer noopener"
           aria-label="Open GitHub repository"

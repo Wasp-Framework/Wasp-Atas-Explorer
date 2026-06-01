@@ -64,8 +64,8 @@ export function ImpressumPage({ onOpenAbout }: { onOpenAbout: () => void }) {
             </a>{' '}
             contains the reusable assembly engine and core logic.
             <br />
-            <a href="https://github.com/Wasp-Framework/Wasp-Atlas-Explorer" target="_blank" rel="noreferrer noopener">
-              Wasp-Atlas-Explorer
+            <a href="https://github.com/Wasp-Framework/Wasp-Atas-Explorer" target="_blank" rel="noreferrer noopener">
+              Wasp-Atas-Explorer
             </a>{' '}
             contains the website/app and project presentation around that engine.
           </p>

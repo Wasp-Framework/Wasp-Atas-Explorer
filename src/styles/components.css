@@ -26,7 +26,8 @@
 .navbar__page-button {
   appearance: none;
   cursor: pointer;
-  font: inherit;
+  font-family: inherit;
+  line-height: inherit;
 }
 
 .navbar__page-link {

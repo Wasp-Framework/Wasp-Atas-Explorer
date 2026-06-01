@@ -68,9 +68,13 @@ export const useBuildStore = create<BuildStore>((set) => ({
 
   setInfoOpen: (isInfoOpen) => set({ isInfoOpen }),
 
-  setUploadedDataset: (uploadedDataset) => set({ uploadedDataset }),
+  setUploadedDataset: (uploadedDataset) =>
+    set({
+      uploadedDataset,
+      uploadedDatasetWarnings: uploadedDataset.warnings || [],
+    }),
 
-  clearUploadedDataset: () => set({ uploadedDataset: null }),
+  clearUploadedDataset: () => set({ uploadedDataset: null, uploadedDatasetWarnings: [] }),
 
   resetBuildState: () => set({ ...initialBuildState }),
 }));

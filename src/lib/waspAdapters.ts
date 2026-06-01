@@ -1,4 +1,4 @@
-import { Box3, Vector3 } from 'three';
+import { Box3, Sphere, Vector3 } from 'three';
 
 export type AggregationColors = {
   colors?: string[];
@@ -23,12 +23,50 @@ export function applyAggregationColors(aggregation: any, colorsConfig: Aggregati
 export async function setAggregationPartCount(aggregation: any, targetCount: number, visualizer: any) {
   if (!aggregation || !visualizer) return;
   await aggregation.modifyParts(targetCount, visualizer);
+  updateVisualizerCameraConstraints(visualizer);
+}
+
+function getSceneBoundsExcludingGhosts(visualizer: any) {
+  const box = new Box3();
+  if (!visualizer?.scene) return box;
+
+  visualizer.scene.updateMatrixWorld?.(true);
+
+  visualizer.scene.children.forEach((child: any) => {
+    if (!child || child.name === '__atlas_ghost_group__') return;
+    box.expandByObject(child);
+  });
+
+  return box;
+}
+
+export function updateVisualizerCameraConstraints(visualizer: any) {
+  if (!visualizer?.scene || !visualizer?.camera) return;
+
+  const box = getSceneBoundsExcludingGhosts(visualizer);
+  if (!isFinite(box.max.x) || box.isEmpty()) return;
+
+  const sphere = box.getBoundingSphere(new Sphere());
+  const radius = Math.max(sphere.radius || 0, 0.5);
+  const minDistance = Math.max(radius * 0.08, 0.25);
+  const maxDistance = Math.max(radius * 24, minDistance * 3);
+  const near = Math.max(radius * 0.0025, 0.01);
+  const far = Math.max(radius * 160, 250);
+
+  visualizer.camera.near = near;
+  visualizer.camera.far = far;
+  visualizer.camera.updateProjectionMatrix?.();
+
+  if (visualizer.cameraControls) {
+    visualizer.cameraControls.minDistance = minDistance;
+    visualizer.cameraControls.maxDistance = maxDistance;
+  }
 }
 
 export function frameVisualizerToScene(visualizer: any, distanceScale = 0.8) {
   if (!visualizer?.scene || !visualizer?.camera) return;
 
-  const box = new Box3().setFromObject(visualizer.scene);
+  const box = getSceneBoundsExcludingGhosts(visualizer);
   if (!isFinite(box.max.x) || box.isEmpty()) return;
 
   const size = box.getSize(new Vector3());
@@ -51,6 +89,8 @@ export function frameVisualizerToScene(visualizer: any, distanceScale = 0.8) {
   } else {
     visualizer.camera.lookAt(center);
   }
+
+  updateVisualizerCameraConstraints(visualizer);
 }
 
 export function placeFirstPartManually(aggregation: any, partName: string, visualizer?: any) {
@@ -58,6 +98,7 @@ export function placeFirstPartManually(aggregation: any, partName: string, visua
   const result = aggregation.placeFirstPart(partName);
   if (result.success && visualizer) {
     visualizer.addEntity(result.part);
+    updateVisualizerCameraConstraints(visualizer);
   }
   return result;
 }
@@ -74,6 +115,7 @@ export function placePartManually(
   const result = aggregation.placePartAtConnection(parentPartId, connectionId, partName, connectionBId);
   if (result.success && visualizer) {
     visualizer.addEntity(result.part);
+    updateVisualizerCameraConstraints(visualizer);
   }
   return result;
 }
@@ -85,6 +127,7 @@ export function removePartById(aggregation: any, partId: number, visualizer?: an
   if (part.children && part.children.length > 0) return false;
   if (visualizer) {
     visualizer.removeEntity(part);
+    updateVisualizerCameraConstraints(visualizer);
   }
   return aggregation.removePartFromAggregation(partId);
 }

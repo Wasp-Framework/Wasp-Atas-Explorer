@@ -21,6 +21,7 @@ import {
   placePartManually,
   removePartById,
   setAggregationPartCount,
+  updateVisualizerCameraConstraints,
 } from './waspAdapters';
 import {
   addGhostMeshes,
@@ -157,6 +158,10 @@ export function growToTarget(agg: any, targetCount: number, viz: any) {
 
 export function frameScene(viz: any, padding = 0.8) {
   frameVisualizerToScene(viz, padding);
+}
+
+export function updateSceneCameraConstraints(viz: any) {
+  updateVisualizerCameraConstraints(viz);
 }
 
 export function applyColors(agg: any, colorsConfig: any) {
