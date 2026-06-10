@@ -31,6 +31,14 @@ function resolveBasePath(mode) {
 export default defineConfig(({ mode }) => ({
   root: __dirname,
   publicDir: resolve(__dirname, 'public'),
+  resolve: {
+    alias: {
+      webwaspjs: resolve(__dirname, 'node_modules/webwaspjs/dist/index.js'),
+    },
+  },
+  optimizeDeps: {
+    exclude: ['webwaspjs'],
+  },
   build: {
     outDir: resolve(__dirname, 'dist')
   },

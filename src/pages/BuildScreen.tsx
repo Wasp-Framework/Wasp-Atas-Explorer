@@ -10,6 +10,7 @@ import {
   loadUploadedDataset,
   createVisualizerInContainer,
   disposeVisualizer,
+  downloadAggregationData,
   growToTarget,
   frameScene,
   applyColors,
@@ -203,6 +204,17 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
     },
     [setBuildMode],
   );
+
+  const handleDownload = useCallback(() => {
+    const agg = aggRef.current;
+    if (!agg) return;
+
+    try {
+      downloadAggregationData(agg, setName || currentSet?.name || slug || 'aggregation');
+    } catch (err) {
+      console.error('Failed to download aggregation data.', err);
+    }
+  }, [currentSet?.name, setName, slug]);
 
   /** Show ghosts at all open connections of the hovered parent part. */
   const showGhostsForParent = useCallback((partName: string | null) => {
@@ -564,6 +576,21 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
             title="Dataset info"
           >
             i
+          </button>
+
+          <button
+            className="build-viewer__download"
+            type="button"
+            onClick={handleDownload}
+            aria-label="Download aggregation JSON"
+            title="Download aggregation JSON"
+            disabled={!aggRef.current || isLoading}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 4v10" />
+              <path d="m8 10 4 4 4-4" />
+              <path d="M5 18h14" />
+            </svg>
           </button>
 
         </div>

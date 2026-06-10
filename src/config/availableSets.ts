@@ -1,3 +1,5 @@
+import { createAggregationFromData } from 'webwaspjs';
+
 const DEFAULT_ATLAS_RAW_BASE = 'https://raw.githubusercontent.com/Wasp-Framework/Wasp-Atlas/main/';
 const ATLAS_RAW_BASE = (import.meta.env.VITE_ATLAS_RAW_BASE || DEFAULT_ATLAS_RAW_BASE).replace(/\/?$/, '/');
 const ATLAS_CATALOG_URL = `${ATLAS_RAW_BASE}catalog/catalog.json`;
@@ -120,6 +122,33 @@ async function toAtlasSet(system: AtlasSystem): Promise<DemoSetConfig | null> {
   };
 }
 
+function logDatasetLoadResult(set: DemoSetConfig, success: boolean, reason?: string) {
+  const prefix = `[Wasp Atlas] Dataset ${success ? 'loaded' : 'failed'}: ${set.slug}`;
+  if (success) {
+    console.info(prefix, { name: set.name, path: `${set.path}${set.aggregation}` });
+  } else {
+    console.warn(prefix, { name: set.name, path: `${set.path}${set.aggregation}`, reason });
+  }
+}
+
+async function validateAtlasSet(set: DemoSetConfig): Promise<boolean> {
+  try {
+    const response = await fetch(`${set.path}${set.aggregation}`, { cache: 'no-store' });
+    if (!response.ok) {
+      logDatasetLoadResult(set, false, `HTTP ${response.status}`);
+      return false;
+    }
+
+    const data = await response.json();
+    createAggregationFromData(data);
+    logDatasetLoadResult(set, true);
+    return true;
+  } catch (error: any) {
+    logDatasetLoadResult(set, false, error?.message || 'Unknown validation error');
+    return false;
+  }
+}
+
 let catalogLoadPromise: Promise<CatalogLoadResult> | null = null;
 
 async function fetchRemoteSets(): Promise<DemoSetConfig[]> {
@@ -132,7 +161,12 @@ async function fetchRemoteSets(): Promise<DemoSetConfig[]> {
   const mapped = (await Promise.all(systems.map((system) => toAtlasSet(system)))).filter(
     (item): item is DemoSetConfig => Boolean(item),
   );
-  return mapped.sort((a, b) => a.name.localeCompare(b.name));
+  const validated = await Promise.all(
+    mapped.map(async (set) => ((await validateAtlasSet(set)) ? set : null)),
+  );
+  return validated
+    .filter((item): item is DemoSetConfig => Boolean(item))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function loadAvailableSets(): Promise<CatalogLoadResult> {
@@ -140,14 +174,7 @@ export async function loadAvailableSets(): Promise<CatalogLoadResult> {
     catalogLoadPromise = (async () => {
       try {
         const remoteSets = await fetchRemoteSets();
-        if (remoteSets.length > 0) {
-          return { sets: remoteSets, fromBackup: false, notice: null };
-        }
-        return {
-          sets: [],
-          fromBackup: false,
-          notice: 'Could not load datasets from Wasp-Atlas catalog.json.',
-        };
+        return { sets: remoteSets, fromBackup: false, notice: null };
       } catch {
         return {
           sets: [],

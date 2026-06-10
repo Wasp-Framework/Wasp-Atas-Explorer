@@ -6,7 +6,7 @@
  * the React layer owns rendering.
  */
 
-import { Visualizer } from 'webwaspjs';
+import { Aggregation, Visualizer } from 'webwaspjs';
 import {
   createAggregationFromData,
   getAggregationCatalogParts,
@@ -75,12 +75,49 @@ export type LoadResult = {
   catalog: PartCatalogEntry[];
 };
 
+function getAggregationRuntimeDiagnostics(aggregation: any) {
+  const prototype = aggregation ? Object.getPrototypeOf(aggregation) : null;
+  return {
+    constructorName: aggregation?.constructor?.name || 'unknown',
+    hasOwnToFileData: Object.prototype.hasOwnProperty.call(aggregation || {}, 'toFileData'),
+    instanceToFileDataType: typeof aggregation?.toFileData,
+    prototypeToFileDataType: typeof prototype?.toFileData,
+    matchesImportedPrototype: prototype === Aggregation.prototype,
+    importedPrototypeToFileDataType: typeof Aggregation?.prototype?.toFileData,
+    keys: Object.keys(aggregation || {}),
+  };
+}
+
+function assertAggregationExportCompatibility(aggregation: any, context: string) {
+  if (!aggregation) {
+    throw new Error(`No aggregation instance in ${context}.`);
+  }
+
+  const diagnostics = getAggregationRuntimeDiagnostics(aggregation);
+  if (diagnostics.instanceToFileDataType !== 'function') {
+    console.error(`[buildRuntime] aggregation export incompatibility in ${context}`, diagnostics);
+    throw new Error(
+      `Aggregation instance is missing toFileData() in ${context}. ` +
+      `constructor=${diagnostics.constructorName}, ` +
+      `instanceToFileData=${diagnostics.instanceToFileDataType}, ` +
+      `prototypeToFileData=${diagnostics.prototypeToFileDataType}, ` +
+      `matchesImportedPrototype=${String(diagnostics.matchesImportedPrototype)}, ` +
+      `importedPrototypeToFileData=${diagnostics.importedPrototypeToFileDataType}.`,
+    );
+  }
+
+  if (import.meta.env.DEV) {
+    console.info(`[buildRuntime] aggregation diagnostics in ${context}`, diagnostics);
+  }
+}
+
 export async function loadDataset(
   set: { path: string; aggregation: string; colors?: string[]; byPart?: Record<string, string> },
 ): Promise<LoadResult> {
   const data = await loadJson(`${set.path}${set.aggregation}`);
   const colorsConfig = await resolveColors(set);
   const agg = createAggregationFromData(data);
+  assertAggregationExportCompatibility(agg, `loadDataset(${set.path}${set.aggregation})`);
   if (colorsConfig) applyAggregationColors(agg, colorsConfig);
 
   const parts = getAggregationCatalogParts(agg);
@@ -100,6 +137,7 @@ export async function loadUploadedDataset(
   payload: { aggregationData: any; byPart?: Record<string, string> },
 ): Promise<LoadResult> {
   const agg = createAggregationFromData(payload.aggregationData);
+  assertAggregationExportCompatibility(agg, 'loadUploadedDataset');
   const byPart = payload.byPart || {};
   const colorValues = Object.values(byPart);
   const colorsConfig = {
@@ -166,6 +204,42 @@ export function updateSceneCameraConstraints(viz: any) {
 
 export function applyColors(agg: any, colorsConfig: any) {
   if (colorsConfig) applyAggregationColors(agg, colorsConfig);
+}
+
+function sanitizeDownloadName(value: string | null | undefined) {
+  const baseValue = (value || 'aggregation').trim().replace(/\.json$/i, '');
+  const safeValue = baseValue
+    .replace(/[<>:"/\\|?*\u0000-\u001f]+/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return safeValue || 'aggregation';
+}
+
+export function exportAggregationData(aggregation: any) {
+  assertAggregationExportCompatibility(aggregation, 'exportAggregationData');
+  return aggregation.toFileData();
+}
+
+export function getAggregationDownloadFileName(name: string | null | undefined) {
+  return `${sanitizeDownloadName(name)}.json`;
+}
+
+export function downloadAggregationData(aggregation: any, name: string | null | undefined) {
+  const data = exportAggregationData(aggregation);
+  const fileName = getAggregationDownloadFileName(name);
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  return { data, fileName };
 }
 
 export {

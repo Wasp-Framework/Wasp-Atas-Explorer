@@ -435,17 +435,6 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
             <div className="datasets-page__intro">
               <h1 className="datasets-page__title">Datasets</h1>
             </div>
-            <div className="datasets-page__actions">
-              <a
-                className="landing__source-link"
-                href="https://github.com/Wasp-Framework/Wasp-Atlas"
-                target="_blank"
-                rel="noreferrer noopener"
-                title="Wasp-Atlas catalog source"
-              >
-                Source: Wasp-Atlas
-              </a>
-            </div>
           </div>
           {catalogNotice ? (
             <p className="dataset-source-notice" role="status" aria-live="polite">

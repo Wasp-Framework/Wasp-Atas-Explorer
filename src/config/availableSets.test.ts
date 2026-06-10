@@ -4,9 +4,21 @@ describe('availableSets', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  it('loads and normalizes sets from atlas catalog + meta', async () => {
+  it('loads, validates, and normalizes sets from atlas catalog + meta', async () => {
+    const createAggregationFromData = vi.fn((data: any) => {
+      if (data?.invalid) {
+        throw new Error('Invalid aggregation payload');
+      }
+      return {};
+    });
+    vi.doMock('webwaspjs', () => ({ createAggregationFromData }));
+
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
     const fetchMock = vi.fn(async (url: string) => {
       if (url.endsWith('/catalog/catalog.json')) {
         return {
@@ -30,6 +42,15 @@ describe('availableSets', () => {
                 tags: ['tag-a'],
                 aggregation_url: 'systems/a-set/aggregation.json',
                 meta_url: 'systems/a-set/meta.json',
+              },
+              {
+                slug: 'broken-set',
+                name: 'Broken Set',
+                description: 'Broken desc',
+                author: 'Broken Author',
+                tags: ['tag-broken'],
+                aggregation_url: 'systems/broken-set/aggregation.json',
+                meta_url: 'systems/broken-set/meta.json',
               },
             ],
           }),
@@ -62,6 +83,36 @@ describe('availableSets', () => {
         };
       }
 
+      if (url.endsWith('/systems/broken-set/meta.json')) {
+        return {
+          ok: true,
+          json: async () => ({
+            units: 'm',
+          }),
+        };
+      }
+
+      if (url.endsWith('/systems/a-set/aggregation.json')) {
+        return {
+          ok: true,
+          json: async () => ({ name: 'Alpha aggregation' }),
+        };
+      }
+
+      if (url.endsWith('/systems/z-set/aggregation.json')) {
+        return {
+          ok: true,
+          json: async () => ({ name: 'Zeta aggregation' }),
+        };
+      }
+
+      if (url.endsWith('/systems/broken-set/aggregation.json')) {
+        return {
+          ok: true,
+          json: async () => ({ invalid: true }),
+        };
+      }
+
       return { ok: false, json: async () => ({}) };
     });
 
@@ -86,5 +137,10 @@ describe('availableSets', () => {
       expect(typeof set.byPart).toBe('object');
       expect(Array.isArray(set.tags)).toBe(true);
     }
+
+    expect(createAggregationFromData).toHaveBeenCalledTimes(3);
+    expect(infoSpy).toHaveBeenCalledTimes(2);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0]?.[0]).toContain('Dataset failed: broken-set');
   });
 });
