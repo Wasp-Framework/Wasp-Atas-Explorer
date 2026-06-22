@@ -5,6 +5,7 @@ import {
   downloadAggregationData,
   exportAggregationData,
   getAggregationDownloadFileName,
+  initializeAggregationScene,
 } from './buildRuntime';
 
 describe('buildRuntime export helpers', () => {
@@ -25,7 +26,7 @@ describe('buildRuntime export helpers', () => {
     expect(getAggregationDownloadFileName('')).toBe('aggregation.json');
   });
 
-  it('confirms real webwaspjs 0.3.3 aggregations expose toData for Wasp-compatible export', () => {
+  it('confirms real webwaspjs 0.3.4 aggregations expose toData for Wasp-compatible export', () => {
     const aggregation = createAggregationFromData({
       object_type: 'Aggregation',
       name: 'Direct toData check',
@@ -92,5 +93,19 @@ describe('buildRuntime export helpers', () => {
     expect(appendSpy).toHaveBeenCalledTimes(1);
     expect(clickSpy).toHaveBeenCalledTimes(1);
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:download');
+  });
+
+  it('renders restored aggregated parts into the visualizer without mutating count', async () => {
+    const addEntity = vi.fn();
+    const aggregation = {
+      aggregated_parts: [{ id: 0, name: 'A' }, { id: 1, name: 'B' }],
+    };
+
+    const count = await initializeAggregationScene(aggregation, { addEntity });
+
+    expect(count).toBe(2);
+    expect(addEntity).toHaveBeenCalledTimes(2);
+    expect(addEntity).toHaveBeenNthCalledWith(1, aggregation.aggregated_parts[0]);
+    expect(addEntity).toHaveBeenNthCalledWith(2, aggregation.aggregated_parts[1]);
   });
 });

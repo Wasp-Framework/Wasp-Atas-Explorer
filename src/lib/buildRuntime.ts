@@ -194,6 +194,26 @@ export function growToTarget(agg: any, targetCount: number, viz: any) {
   return setAggregationPartCount(agg, targetCount, viz);
 }
 
+export async function initializeAggregationScene(
+  agg: any,
+  viz: any,
+  defaultTargetCount = 50,
+) {
+  if (!agg || !viz) return 0;
+
+  const existingParts = Array.isArray(agg.aggregated_parts) ? agg.aggregated_parts : [];
+  if (existingParts.length > 0) {
+    existingParts.forEach((part: any) => {
+      viz.addEntity(part);
+    });
+    updateSceneCameraConstraints(viz);
+    return existingParts.length;
+  }
+
+  await growToTarget(agg, defaultTargetCount, viz);
+  return agg.aggregated_parts.length;
+}
+
 export function frameScene(viz: any, padding = 0.8) {
   frameVisualizerToScene(viz, padding);
 }

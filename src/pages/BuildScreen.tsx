@@ -12,6 +12,7 @@ import {
   disposeVisualizer,
   downloadAggregationData,
   growToTarget,
+  initializeAggregationScene,
   frameScene,
   applyColors,
   updateSceneCameraConstraints,
@@ -167,8 +168,8 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
           vizRef.current = createVisualizerInContainer(canvasRef.current);
         }
 
-        /* grow to default count */
-        await growToTarget(aggregation, 50, vizRef.current);
+        const initialPartCount = await initializeAggregationScene(aggregation, vizRef.current, 50);
+        setAggregationTarget(initialPartCount);
         frameScene(vizRef.current);
 
         setLoaded({
