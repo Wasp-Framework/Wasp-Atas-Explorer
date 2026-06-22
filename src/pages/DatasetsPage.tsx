@@ -229,9 +229,9 @@ function UploadStartModal({
         <button className="modal__close" aria-label="Close upload instructions" onClick={onClose}>
           ×
         </button>
-        <h2 className="modal__title">Upload your own dataset</h2>
+        <h2 className="modal__title">Test your own aggregation</h2>
         <p className="upload-start__copy">
-          Export your own custom dataset from WASP with the "Wasp_Serialize Object to File" component from the "Experimental" Tab and upload the generated aggregation.json.
+          Upload a Wasp serialized aggregation JSON from Grasshopper via "Wasp_Serialize Object to File" in the "7 | IO" category, or re-upload a Wasp-compatible JSON downloaded from Wasp-Atlas.
         </p>
         <label className="landing__cta-secondary upload-start__button">
           Upload
@@ -457,7 +457,7 @@ export function DatasetsPage({ onOpenAbout }: { onOpenAbout: () => void }) {
                 </svg>
               </button>
               <div className="landing-card__footer">
-                <span className="landing-card__title">Upload your own dataset</span>
+                <span className="landing-card__title">Test your own aggregation</span>
               </div>
             </div>
           </div>

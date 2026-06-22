@@ -1,3 +1,4 @@
+import { createAggregationFromData } from 'webwaspjs';
 import { sanitizeUploadedAggregationData } from './uploadSanitizer';
 
 describe('sanitizeUploadedAggregationData', () => {
@@ -25,5 +26,77 @@ describe('sanitizeUploadedAggregationData', () => {
       'Ignored unsupported global constraints (2).',
       'Ignored unsupported catalog data from the uploaded aggregation.',
     ]);
+  });
+
+  it('normalizes Wasp serialized uploads without stripping supported aggregation state', () => {
+    const rawData = {
+      name: 'Uploaded export',
+      parts: {
+        a: { class_type: 'Part', name: 'Beam' },
+      },
+      aggregated_parts: {
+        '0': { id: 0, name: 'Beam' },
+      },
+      aggregated_parts_sequence: [0],
+    };
+
+    const result = sanitizeUploadedAggregationData(rawData);
+
+    expect(result.aggregationData).toEqual({
+      object_type: 'Aggregation',
+      name: 'Uploaded export',
+      parts: [{ class_type: 'Part', name: 'Beam' }],
+      rules: [],
+      global_constraints: [],
+      catalog: null,
+      mode: 0,
+      coll_check: true,
+      field: null,
+      graph: {},
+      aggregated_parts: {
+        '0': { id: 0, name: 'Beam' },
+      },
+      aggregated_parts_sequence: [0],
+    });
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('accepts webwaspjs 0.3.3 serialized aggregation payloads', () => {
+    const rawData = {
+      object_type: 'Aggregation',
+      name: 'Direct upload check',
+      parts: [],
+      rules: [],
+      rnd_seed: 7,
+      global_constraints: [],
+      catalog: null,
+      mode: 0,
+      coll_check: true,
+      field: null,
+      graph: {},
+      include_aggr_geo: false,
+      aggregated_parts: {},
+      aggregated_parts_sequence: [],
+    };
+
+    const { aggregationData, warnings } = sanitizeUploadedAggregationData(rawData);
+    const aggregation = createAggregationFromData(aggregationData);
+
+    expect(aggregation.name).toBe('Direct upload check');
+    expect(typeof aggregation.toData).toBe('function');
+    expect(warnings).toEqual([]);
+  });
+
+  it('rejects the legacy compact aggregation export format with a clear error', () => {
+    const rawData = {
+      aggregation_name: 'Legacy compact export',
+      parts: {
+        a: { class_type: 'Part', name: 'Beam' },
+      },
+    };
+
+    expect(() => sanitizeUploadedAggregationData(rawData)).toThrow(
+      'This file uses the compact aggregation export format and cannot be uploaded here. Use a Wasp serialized aggregation file or re-download the dataset from the build screen.',
+    );
   });
 });
