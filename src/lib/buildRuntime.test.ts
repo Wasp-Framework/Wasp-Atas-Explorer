@@ -12,11 +12,12 @@ describe('buildRuntime export helpers', () => {
     vi.restoreAllMocks();
   });
 
-  it('exports aggregation data through webwaspjs toFileData', () => {
-    const toFileData = vi.fn(() => ({ aggregation_name: 'demo', parts: {} }));
+  it('exports aggregation data through webwaspjs toData(false)', () => {
+    const toData = vi.fn(() => ({ object_type: 'Aggregation', name: 'demo', parts: [], rules: [] }));
 
-    expect(exportAggregationData({ toFileData })).toEqual({ aggregation_name: 'demo', parts: {} });
-    expect(toFileData).toHaveBeenCalledTimes(1);
+    expect(exportAggregationData({ toData })).toEqual({ object_type: 'Aggregation', name: 'demo', parts: [], rules: [] });
+    expect(toData).toHaveBeenCalledTimes(1);
+    expect(toData).toHaveBeenCalledWith(false);
   });
 
   it('sanitizes the download filename', () => {
@@ -24,7 +25,7 @@ describe('buildRuntime export helpers', () => {
     expect(getAggregationDownloadFileName('')).toBe('aggregation.json');
   });
 
-  it('confirms real webwaspjs 0.3.2 aggregations expose toFileData', () => {
+  it('confirms real webwaspjs 0.3.3 aggregations expose toData for Wasp-compatible export', () => {
     const aggregation = createAggregationFromData({
       object_type: 'Aggregation',
       name: 'Direct toData check',
@@ -42,10 +43,22 @@ describe('buildRuntime export helpers', () => {
       aggregated_parts_sequence: [],
     });
 
-    expect(typeof aggregation.toFileData).toBe('function');
+    expect(typeof aggregation.toData).toBe('function');
     expect(exportAggregationData(aggregation)).toEqual({
-      aggregation_name: 'Direct toData check',
-      parts: {},
+      object_type: 'Aggregation',
+      name: 'Direct toData check',
+      parts: [],
+      rules: [],
+      rnd_seed: 7,
+      global_constraints: [],
+      catalog: null,
+      mode: 0,
+      coll_check: true,
+      field: null,
+      graph: {},
+      include_aggr_geo: false,
+      aggregated_parts: {},
+      aggregated_parts_sequence: [],
     });
   });
 
@@ -69,7 +82,7 @@ describe('buildRuntime export helpers', () => {
 
     const result = downloadAggregationData(
       {
-        toFileData: () => ({ aggregation_name: 'Test Export', parts: [{ id: 1 }] }),
+        toData: () => ({ object_type: 'Aggregation', name: 'Test Export', aggregated_parts: { '1': { id: 1 } } }),
       },
       'Test Export',
     );

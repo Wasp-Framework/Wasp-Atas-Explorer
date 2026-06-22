@@ -582,8 +582,8 @@ export function BuildScreen({ onOpenAbout }: { onOpenAbout: () => void }) {
             className="build-viewer__download"
             type="button"
             onClick={handleDownload}
-            aria-label="Download aggregation JSON"
-            title="Download aggregation JSON"
+            aria-label="Download Wasp-compatible aggregation JSON"
+            title="Download Wasp-compatible aggregation JSON"
             disabled={!aggRef.current || isLoading}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

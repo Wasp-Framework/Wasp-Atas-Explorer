@@ -79,11 +79,11 @@ function getAggregationRuntimeDiagnostics(aggregation: any) {
   const prototype = aggregation ? Object.getPrototypeOf(aggregation) : null;
   return {
     constructorName: aggregation?.constructor?.name || 'unknown',
-    hasOwnToFileData: Object.prototype.hasOwnProperty.call(aggregation || {}, 'toFileData'),
-    instanceToFileDataType: typeof aggregation?.toFileData,
-    prototypeToFileDataType: typeof prototype?.toFileData,
+    hasOwnToData: Object.prototype.hasOwnProperty.call(aggregation || {}, 'toData'),
+    instanceToDataType: typeof aggregation?.toData,
+    prototypeToDataType: typeof prototype?.toData,
     matchesImportedPrototype: prototype === Aggregation.prototype,
-    importedPrototypeToFileDataType: typeof Aggregation?.prototype?.toFileData,
+    importedPrototypeToDataType: typeof Aggregation?.prototype?.toData,
     keys: Object.keys(aggregation || {}),
   };
 }
@@ -94,15 +94,15 @@ function assertAggregationExportCompatibility(aggregation: any, context: string)
   }
 
   const diagnostics = getAggregationRuntimeDiagnostics(aggregation);
-  if (diagnostics.instanceToFileDataType !== 'function') {
+  if (diagnostics.instanceToDataType !== 'function') {
     console.error(`[buildRuntime] aggregation export incompatibility in ${context}`, diagnostics);
     throw new Error(
-      `Aggregation instance is missing toFileData() in ${context}. ` +
+      `Aggregation instance is missing toData() in ${context}. ` +
       `constructor=${diagnostics.constructorName}, ` +
-      `instanceToFileData=${diagnostics.instanceToFileDataType}, ` +
-      `prototypeToFileData=${diagnostics.prototypeToFileDataType}, ` +
+      `instanceToData=${diagnostics.instanceToDataType}, ` +
+      `prototypeToData=${diagnostics.prototypeToDataType}, ` +
       `matchesImportedPrototype=${String(diagnostics.matchesImportedPrototype)}, ` +
-      `importedPrototypeToFileData=${diagnostics.importedPrototypeToFileDataType}.`,
+      `importedPrototypeToData=${diagnostics.importedPrototypeToDataType}.`,
     );
   }
 
@@ -218,7 +218,7 @@ function sanitizeDownloadName(value: string | null | undefined) {
 
 export function exportAggregationData(aggregation: any) {
   assertAggregationExportCompatibility(aggregation, 'exportAggregationData');
-  return aggregation.toFileData();
+  return aggregation.toData(false);
 }
 
 export function getAggregationDownloadFileName(name: string | null | undefined) {
