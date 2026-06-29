@@ -26,7 +26,7 @@ describe('buildRuntime export helpers', () => {
     expect(getAggregationDownloadFileName('')).toBe('aggregation.json');
   });
 
-  it('confirms real webwaspjs 0.3.4 aggregations expose toData for Wasp-compatible export', () => {
+  it('confirms real webwaspjs 0.3.5 aggregations expose toData for Wasp-compatible export', () => {
     const aggregation = createAggregationFromData({
       object_type: 'Aggregation',
       name: 'Direct toData check',

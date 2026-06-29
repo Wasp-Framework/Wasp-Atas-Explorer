@@ -61,7 +61,7 @@ describe('sanitizeUploadedAggregationData', () => {
     expect(result.warnings).toEqual([]);
   });
 
-  it('accepts webwaspjs 0.3.4 serialized aggregation payloads', () => {
+  it('accepts webwaspjs 0.3.5 serialized aggregation payloads', () => {
     const rawData = {
       object_type: 'Aggregation',
       name: 'Direct upload check',
